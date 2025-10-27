@@ -21,7 +21,6 @@ The complete source code, experimental setup, and documentation will be uploaded
 - **Hot-path Commutativity**: Exploits commutativity properties in frequently accessed transaction paths
 - **Security**: Maintains strong security guarantees for transaction isolation
 - **High Performance**: Achieves significant performance improvements over traditional concurrency control mechanisms
-- **Scalability**: Designed to scale efficiently with increasing transaction workloads
 
 ## Coming Soon
 
@@ -29,21 +28,12 @@ The complete source code, experimental setup, and documentation will be uploaded
 - [ ] Build and installation instructions
 - [ ] Experimental setup and benchmarking tools
 - [ ] Reproduction instructions for paper results
-- [ ] Documentation and API reference
 
 ## Citation
 
 If you use this work in your research, please cite our paper:
 
-```bibtex
-@inproceedings{ipso2026,
-  title={Secure and High Performance Transaction Concurrency Control via Hot-path Commutativity},
-  author={[Authors]},
-  booktitle={Proceedings of the IEEE International Conference on Data Engineering (ICDE)},
-  year={2026},
-  organization={IEEE}
-}
-```
+TBD
 
 *Note: The full citation will be updated upon paper acceptance.*
 
