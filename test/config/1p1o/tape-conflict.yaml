@@ -1,0 +1,41 @@
+# Definition of nodes
+org1peer0: &org1peer0
+  address: org1peer0:7051
+  tlsCACert: ./organization/org1/tlsca/tlsca.org1-cert.pem
+org0orderer: &org0orderer
+  address: org0orderer:7050
+  tlsCACert: ./organization/org0/tlsca/tlsca.org0-cert.pem
+# Nodes to interact with
+endorsers:
+  - *org1peer0
+committer: *org1peer0
+orderer: *org0orderer
+channel: mychannel
+chaincode: smallbank
+version: 1.0
+mspid: Org1MSP
+privateKey: ./organization/org1/user/user1@org1/msp/keystore/key.pem
+signCert: ./organization/org1/user/user1@org1/msp/signcerts/cert.pem
+e2e: true
+# If rate equals to 0, it means unlimited speed
+rate: 2000
+burst: 50000
+txNum: 100
+txTime: 120
+txType: conflict
+txIDStart: 4000
+session: 1p1o-conflict
+hotAccountRatio: 0.01
+conflictRatio: 0.9
+connNum: 8
+clientPerConnNum: 8
+integratorNum: 64
+broadcasterNum: 64
+# if true, let the protoutil decide the txid; if false, use customized txid
+checkTxID: true
+# if true, output rwset for each transaction
+checkRWSet: false
+logPath: /result/conflict_log.txt
+reportPath: /result/conflict_report.txt
+# If seed equals to 0, set seed to the current time.
+seed: 1999

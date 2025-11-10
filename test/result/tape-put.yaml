@@ -1,0 +1,70 @@
+# Definition of nodes
+org1peer0: &org1peer0
+  address: org1peer0:7051
+  tlsCACert: ./organization/org1/tlsca/tlsca.org1-cert.pem
+
+org1peer1: &org1peer1
+  address: org1peer1:7051
+  tlsCACert: ./organization/org1/tlsca/tlsca.org1-cert.pem
+
+org2peer0: &org2peer0
+  address: org2peer0:7051
+  tlsCACert: ./organization/org2/tlsca/tlsca.org2-cert.pem
+
+org2peer1: &org2peer1
+  address: org2peer1:7051
+  tlsCACert: ./organization/org2/tlsca/tlsca.org2-cert.pem
+
+org0orderer: &org0orderer
+  address: org0orderer:7050
+  tlsCACert: ./organization/org0/tlsca/tlsca.org0-cert.pem
+
+# Nodes to interact with
+endorsers:
+  - *org1peer0
+  # - *org1peer1
+  # - *org2peer0
+  # - *org2peer1
+
+committer: *org1peer0
+
+orderer: *org0orderer
+
+channel: mychannel
+
+chaincode: smallbank
+version: 1.0
+
+mspid: Org1MSP
+privateKey: ./organization/org1/user/user1@org1/msp/keystore/key.pem
+signCert: ./organization/org1/user/user1@org1/msp/signcerts/cert.pem
+
+e2e: true
+
+# If rate equals to 0, it means unlimited speed
+rate: 0
+burst: 50000
+
+txNum: 2000
+txTime: 120
+txType: put
+txIDStart: 0
+session: 4p1o-put
+
+connNum: 16
+clientPerConnNum: 16
+integratorNum: 64
+broadcasterNum: 64
+hotAccountRatio: 0
+conflictRatio: 0
+
+# if true, let the protoutil decide the txid; if false, use customized txid
+checkTxID: true
+# if true, output rwset for each transaction
+checkRWSet: false
+
+logPath: /result/put_log.txt
+reportPath: /result/put_report.txt
+
+# If seed equals to 0, set seed to the current time.
+seed: 233

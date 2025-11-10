@@ -1,0 +1,179 @@
+# Networks can also be given a custom name (since version 3.5)
+version: "3.5"
+
+name: hlf
+
+volumes:
+  org0orderer:
+  org1peer0:
+  org1peer1:
+  org2peer0:
+  org2peer1:
+
+networks:
+  hlf:
+    name: hlf
+    driver: bridge
+
+# extra_hosts:
+#     - "host.docker.internal:host-gateway"
+
+services:
+  org0orderer:
+    container_name: org0orderer
+    image: hyperledger/${HLF_IMAGE_PREFIX}-orderer:latest
+    environment:
+      - CC_TYPE=occ-sharp
+      - MV_STORE_PATH=/home # for occ-* scheduler
+      - CORE_LEDGER_STATE_STATEDATABASE=goleveldb
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      # enabled TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      # - ORDERER_KAFKA_TOPIC_REPLICATIONFACTOR=1
+      # - ORDERER_KAFKA_VERBOSE=true
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_METRICS_PROVIDER=prometheus
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:9443
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric
+    command: orderer
+    volumes:
+      - ../../channel/system-channel/genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ../../organization/org0/orderer/org0orderer/msp:/var/hyperledger/orderer/msp
+      - ../../organization/org0/orderer/org0orderer/tls:/var/hyperledger/orderer/tls
+      - org0orderer:/var/hyperledger/production/orderer
+    ports:
+      - 7050:7050
+    networks:
+      - hlf
+
+  org1peer0:
+    container_name: org1peer0
+    image: hyperledger/${HLF_IMAGE_PREFIX}-peer:latest
+    environment:
+      - CC_TYPE=occ-sharp
+      - MV_STORE_PATH=/home # for occ-* scheduler
+      #Generic peer variables
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=hlf
+      - FABRIC_LOGGING_SPEC=INFO
+      # - FABRIC_LOGGING_SPEC=DEBUG
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      # Peer specific variabes
+      - CORE_PEER_ID=org1peer0
+      - CORE_PEER_ADDRESS=org1peer0:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=org1peer0:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=org1peer0:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=org1peer0:7051
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_METRICS_PROVIDER=prometheus
+      - CORE_OPERATIONS_LISTENADDRESS=0.0.0.0:9443
+      - CORE_LEDGER_STATE_STATEDATABASE=${STATEDATABASE}
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../../organization/org1/peer/org1peer0/msp:/etc/hyperledger/fabric/msp
+      - ../../organization/org1/peer/org1peer0/tls:/etc/hyperledger/fabric/tls
+      - org1peer0:/var/hyperledger/production
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    ports:
+      - 7051:7051
+    networks:
+      - hlf
+
+  cli:
+    container_name: cli
+    image: hyperledger/${HLF_IMAGE_PREFIX}-tools:latest
+    tty: true
+    stdin_open: true
+    environment:
+      - HLF_TYPE=${HLF_TYPE} # for dedicated chaincode
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=org1peer0:7051
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organization/org1/peer/org1peer0/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organization/org1/peer/org1peer0/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/organization/org1/peer/org1peer0/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/organization/org1/user/org1admin@org1/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: /bin/bash
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ../../scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts
+      - ../../config/${DEPLOY_SCHEME}:/opt/gopath/src/github.com/hyperledger/fabric/peer/config/${DEPLOY_SCHEME}
+      - ../../organization:/opt/gopath/src/github.com/hyperledger/fabric/peer/organization
+      - ../../channel:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel
+      - ../../chaincode:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+      - ../../env.sh:/opt/gopath/src/github.com/hyperledger/fabric/peer/env.sh
+    depends_on:
+      - org1peer0
+      - org0orderer
+    networks:
+      - hlf
+
+  tape:
+    container_name: tape
+    image: tape:${HLF_TYPE}
+    environment:
+      - TAPE_GENERATION_RATE=${TAPE_GENERATION_RATE}
+      - RESUBMIT=false
+    tty: true
+    stdin_open: true
+    working_dir: /
+    command: /bin/sh
+    volumes:
+      - ../../config/${DEPLOY_SCHEME}/tape-put.yaml:/config/${DEPLOY_SCHEME}/tape-put.yaml
+      - ../../config/${DEPLOY_SCHEME}/tape-conflict.yaml:/config/${DEPLOY_SCHEME}/tape-conflict.yaml
+      - ../../organization:/organization
+      - ../../result:/result
+      - ../../scripts/benchmark.sh:/scripts/benchmark.sh
+      - ../../scripts/util.sh:/scripts/util.sh
+      - ../../env.sh:/env.sh
+    ports:
+      - 9876:9876
+    networks:
+      - hlf
+
+  # prometheus:
+  #   container_name: prometheus_hlf
+  #   image: prom/prometheus:latest
+  #   ports:
+  #     - 9098:9090
+  #   command:
+  #     - --config.file=/etc/prometheus/prometheus.yml
+  #   volumes:
+  #     - ../../config/${DEPLOY_SCHEME}/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   depends_on:
+  #     - cli
+  #   networks:
+  #     - hlf
+
+  # grafana:
+  #   container_name: grafana_hlf
+  #   image: grafana/grafana-enterprise
+  #   ports:
+  #     - 3000:3000
+  #   depends_on:
+  #     - prometheus
+  #   networks:
+  #     - hlf

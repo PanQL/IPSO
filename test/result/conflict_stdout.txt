@@ -1,0 +1,2 @@
+Conflict ratio 0.500000
+Hot account ratio 0.010000
