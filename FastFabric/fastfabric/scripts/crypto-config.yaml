@@ -1,0 +1,15 @@
+OrdererOrgs:
+- Name: Orderer
+  Domain: orderer-domain
+  Specs:
+    - Hostname: panda2
+PeerOrgs:
+- Name: Org1
+  Domain: peer-domain
+  EnableNodeOUs: true
+  Specs:
+    - Hostname: panda2
+    
+    
+  Users:
+    Count: 1

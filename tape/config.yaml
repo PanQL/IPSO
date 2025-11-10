@@ -1,0 +1,114 @@
+# Definition of nodes
+peer1: &peer1
+  addr: localhost:7051
+  tlsCACert: ./organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+
+peer2: &peer2
+  addr: localhost:8051
+  tlsCACert: ./organizations/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls/ca.crt
+
+peer3: &peer3
+  addr: localhost:9051
+  tlsCACert: ./organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
+
+peer4: &peer4
+  addr: localhost:10051
+  tlsCACert: ./organizations/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/ca.crt
+
+orderer1: &orderer1
+  addr: localhost:7050
+  tlsCACert: ./organizations/ordererOrganizations/example.com/msp/tlscacerts/ca.crt
+
+# Nodes to interact with
+endorserGroupNum: 1
+endorsers:
+  # - *peer1
+  # - *peer2
+  - *peer3
+  - *peer4
+# we might support multi-committer in the future for more complex test scenario,
+# i.e. consider tx committed only if it's done on >50% of nodes. But for now,
+# it seems sufficient to support single committer.
+committer: *peer2
+orderer: *orderer1
+
+# Invocation configs
+channel: mychannel
+chaincode: smallbank
+# args:
+#   - GetAllAssets
+mspid: Org1MSP
+privateKey: ./organizations/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/keystore/key.pem
+signCert: ./organizations/peerOrganizations/org1.example.com/users/User1@org1.example.com/msp/signcerts/cert.pem
+
+connNum: 16
+clientPerConnNum: 16
+broadcasterNum: 20
+signerNum: 10
+integratorNum: 10
+
+txNum: 50000
+txTime: 120 #TODO
+txType: put
+
+# path of benchmark log
+logPath: ../result/tx.log
+
+# if checkTxID is false, Fabric must disable txid check in peer and orderer.
+# It should always be set to true.
+checkTxID: false
+# if true, output rwset for each transaction
+checkRWSet: true
+e2e: false # end-to-end test
+seed: 190129 # if seed equals to 0, set seed to the current time.
+
+# new parameters
+# transactionType: init
+metricsType: prometheus
+metricsAddr: 0.0.0.0:9876
+interval: 10000
+clientsPerEndorser: 1 # one client per endorser to simulate the leading endorser
+smartContract: smallbank # KVStore
+
+generatorBuffer: 10000
+
+workload: smallbank
+workloadDirectory: ./__workload
+accountNumber: 10002
+transactionNumber: 50000
+hotAccountRate: 0.01
+
+sampleType: random # random
+hotRate: 0.5
+zipfs: 0.6
+
+WorkloadThread: 4
+
+retry: 20000000 # retry number
+wait: true
+resubmit: true # deprecated, use config.yaml instead
+
+# breakdown
+crdtOnly: false
+
+DepositChecking: 0.125
+WriteCheck: 0.125
+TransactSavings: 0.125
+Amalgamate: 0.125
+SendPayment: 0.5
+
+KV2: 0.4
+KV4: 0.3
+KV8: 0.2
+KV16: 0.1
+
+# deprecated
+hotBuyer: 0.05
+hotSeller: 0.5
+maxTxsPerSession: 30
+minTxsPerSession: 10
+maxHotPay: 10
+maxUniqueKeys: 1024
+
+queryNode: 0
+newseed: 137373737373737
